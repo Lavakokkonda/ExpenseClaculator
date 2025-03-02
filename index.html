@@ -174,7 +174,7 @@
     <div class="container">
         <div class="grand-total">
             <span>Grand Total:</span>
-            <span id="grand-total-amount">₹0.00</span>
+            <span id="grand-total-amount">$0.00</span>
         </div>
         <button id="calculate-grand-total" style="width: 100%; margin-top: 10px; background-color: #2ecc71;">
             Calculate Grand Total
@@ -242,20 +242,15 @@
                         // Update category total
                         updateCategoryTotal(categoryIndex);
                         
-                        // Clear input but keep focus
+                        // Clear input
                         expenseAmountInput.value = '';
-                        
-                        // Make sure input stays focused and prevent keyboard from hiding on mobile
                         expenseAmountInput.focus();
                         
-                        // Render categories without losing focus
-                        const activeCategory = categories[categoryIndex].id;
-                        renderCategories(activeCategory);
+                        // Render categories
+                        renderCategories();
                     }
                 } else {
                     alert('Please enter a valid amount');
-                    // Keep focus
-                    expenseAmountInput.focus();
                 }
             }
             
@@ -267,14 +262,14 @@
                 // Update the display
                 const categoryTotalElement = document.getElementById(`category-total-${category.id}`);
                 if (categoryTotalElement) {
-                    categoryTotalElement.textContent = `₹${category.total.toFixed(2)}`;
+                    categoryTotalElement.textContent = `$${category.total.toFixed(2)}`;
                 }
             }
             
             // Update grand total
             function updateGrandTotal() {
                 const grandTotal = categories.reduce((sum, category) => sum + category.total, 0);
-                grandTotalAmount.textContent = `₹${grandTotal.toFixed(2)}`;
+                grandTotalAmount.textContent = `$${grandTotal.toFixed(2)}`;
             }
             
             // Remove expense
@@ -287,21 +282,13 @@
                     if (expenseIndex !== -1) {
                         categories[categoryIndex].expenses.splice(expenseIndex, 1);
                         updateCategoryTotal(categoryIndex);
-                        // Preserve the active category when re-rendering
-                        renderCategories(categoryId);
+                        renderCategories();
                     }
                 }
             }
             
             // Render categories
-            function renderCategories(activeInputId = null) {
-                // Store the currently focused element position
-                let activeElement = document.activeElement;
-                let activeElementId = activeElement ? activeElement.id : null;
-                
-                // Save the scroll position
-                const scrollPos = window.scrollY;
-                
+            function renderCategories() {
                 categoriesContainer.innerHTML = '';
                 
                 if (categories.length === 0) {
@@ -331,7 +318,7 @@
                             const expenseElement = document.createElement('div');
                             expenseElement.className = 'expense-item';
                             expenseElement.innerHTML = `
-                                <span class="expense-amount">₹${expense.amount.toFixed(2)}</span>
+                                <span class="expense-amount">$${expense.amount.toFixed(2)}</span>
                                 <button class="remove-btn" onclick="removeExpense(${category.id}, ${expense.id})">✕</button>
                             `;
                             expensesListElement.appendChild(expenseElement);
@@ -351,7 +338,7 @@
                     totalElement.className = 'category-total';
                     totalElement.innerHTML = `
                         <span>Total ${category.name}:</span>
-                        <span id="category-total-${category.id}">₹${category.total.toFixed(2)}</span>
+                        <span id="category-total-${category.id}">$${category.total.toFixed(2)}</span>
                     `;
                     
                     // Append all elements
@@ -373,44 +360,13 @@
                     // Add Enter key functionality for expense input
                     currentExpenseInput.addEventListener('keypress', function(event) {
                         if (event.key === 'Enter') {
-                            event.preventDefault(); // Prevent default to avoid closing mobile keyboards
                             addExpenseToCategory(category.id);
-                        }
-                    });
-                    
-                    // Special handler to keep mobile keyboard open
-                    currentExpenseInput.addEventListener('blur', function(event) {
-                        // For mobile, add a slight delay before refocusing
-                        if (activeInputId === category.id) {
-                            setTimeout(() => {
-                                currentExpenseInput.focus();
-                            }, 10);
                         }
                     });
                 });
                 
                 // Add functions to window object to make them accessible from inline event handlers
                 window.removeExpense = removeExpense;
-                
-                // Restore focus to the active input if there was one
-                if (activeInputId) {
-                    const inputToFocus = document.getElementById(`expense-amount-${activeInputId}`);
-                    if (inputToFocus) {
-                        setTimeout(() => {
-                            inputToFocus.focus();
-                        }, 0);
-                    }
-                } else if (activeElementId) {
-                    const elementToFocus = document.getElementById(activeElementId);
-                    if (elementToFocus) {
-                        setTimeout(() => {
-                            elementToFocus.focus();
-                        }, 0);
-                    }
-                }
-                
-                // Restore scroll position
-                window.scrollTo(0, scrollPos);
             }
             
             // Initialize
@@ -419,7 +375,6 @@
             // Enter key functionality for category name
             categoryNameInput.addEventListener('keypress', function(event) {
                 if (event.key === 'Enter') {
-                    event.preventDefault(); // Prevent default to avoid closing mobile keyboards
                     addCategory();
                 }
             });
@@ -430,19 +385,6 @@
                     updateGrandTotal();
                 }
             });
-            
-            // Prevent the mobile keyboard from closing
-            document.addEventListener('touchend', function(e) {
-                // If the touched element is an input, prevent the default action
-                if (e.target.tagName === 'INPUT') {
-                    e.preventDefault();
-                    
-                    // Keep the focus on the input element
-                    setTimeout(() => {
-                        e.target.focus();
-                    }, 0);
-                }
-            }, false);
         });
     </script>
 </body>
