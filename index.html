@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category-Based Expense Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        #categories-container {
+            margin-top: 20px;
+        }
+        
+        .category {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .category-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+        
+        .expense-amount {
+            font-weight: bold;
+        }
+        
+        .add-expense-form {
+            display: flex;
+            margin-top: 10px;
+            gap: 10px;
+        }
+        
+        .category-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ccc;
+        }
+        
+        .grand-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-top: 15px;
+            padding: 15px;
+            background: #e1f5fe;
+            border-radius: 8px;
+            font-size: 20px;
+        }
+        
+        .remove-btn {
+            background-color: #e74c3c;
+            padding: 3px 8px;
+            font-size: 14px;
+        }
+        
+        .remove-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 24px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .add-expense-form {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Category-Based Expense Calculator</h1>
+    
+    <div class="container">
+        <h2>Add New Category</h2>
+        <div class="input-group">
+            <input type="text" id="category-name" placeholder="Category name (e.g., Tea, Food, Rent)">
+            <button id="add-category-btn">Add Category</button>
+        </div>
+    </div>
+    
+    <div class="container" id="categories-container">
+        <!-- Categories will be added here -->
+    </div>
+    
+    <div class="container">
+        <div class="grand-total">
+            <span>Grand Total:</span>
+            <span id="grand-total-amount">$0.00</span>
+        </div>
+        <button id="calculate-grand-total" style="width: 100%; margin-top: 10px; background-color: #2ecc71;">
+            Calculate Grand Total
+        </button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get elements
+            const categoryNameInput = document.getElementById('category-name');
+            const addCategoryBtn = document.getElementById('add-category-btn');
+            const categoriesContainer = document.getElementById('categories-container');
+            const grandTotalAmount = document.getElementById('grand-total-amount');
+            const calculateGrandTotalBtn = document.getElementById('calculate-grand-total');
+            
+            // Initialize categories array
+            let categories = [];
+            
+            // Add category
+            addCategoryBtn.addEventListener('click', function() {
+                addCategory();
+            });
+            
+            // Function to add category
+            function addCategory() {
+                const categoryName = categoryNameInput.value.trim();
+                
+                if (categoryName) {
+                    // Create new category object
+                    const category = {
+                        id: Date.now(), // Unique ID
+                        name: categoryName,
+                        expenses: [],
+                        total: 0
+                    };
+                    
+                    categories.push(category);
+                    renderCategories();
+                    categoryNameInput.value = '';
+                    categoryNameInput.focus();
+                } else {
+                    alert('Please enter a category name');
+                }
+            }
+            
+            // Calculate grand total
+            calculateGrandTotalBtn.addEventListener('click', function() {
+                updateGrandTotal();
+            });
+            
+            // Add expense to category
+            function addExpenseToCategory(categoryId) {
+                const expenseAmountInput = document.getElementById(`expense-amount-${categoryId}`);
+                const amount = parseFloat(expenseAmountInput.value);
+                
+                if (!isNaN(amount) && amount > 0) {
+                    const categoryIndex = categories.findIndex(c => c.id === categoryId);
+                    
+                    if (categoryIndex !== -1) {
+                        categories[categoryIndex].expenses.push({
+                            id: Date.now(),
+                            amount: amount
+                        });
+                        
+                        // Update category total
+                        updateCategoryTotal(categoryIndex);
+                        
+                        // Clear input
+                        expenseAmountInput.value = '';
+                        expenseAmountInput.focus();
+                        
+                        // Render categories
+                        renderCategories();
+                    }
+                } else {
+                    alert('Please enter a valid amount');
+                }
+            }
+            
+            // Update category total
+            function updateCategoryTotal(categoryIndex) {
+                const category = categories[categoryIndex];
+                category.total = category.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+                
+                // Update the display
+                const categoryTotalElement = document.getElementById(`category-total-${category.id}`);
+                if (categoryTotalElement) {
+                    categoryTotalElement.textContent = `$${category.total.toFixed(2)}`;
+                }
+            }
+            
+            // Update grand total
+            function updateGrandTotal() {
+                const grandTotal = categories.reduce((sum, category) => sum + category.total, 0);
+                grandTotalAmount.textContent = `$${grandTotal.toFixed(2)}`;
+            }
+            
+            // Remove expense
+            function removeExpense(categoryId, expenseId) {
+                const categoryIndex = categories.findIndex(c => c.id === categoryId);
+                
+                if (categoryIndex !== -1) {
+                    const expenseIndex = categories[categoryIndex].expenses.findIndex(e => e.id === expenseId);
+                    
+                    if (expenseIndex !== -1) {
+                        categories[categoryIndex].expenses.splice(expenseIndex, 1);
+                        updateCategoryTotal(categoryIndex);
+                        renderCategories();
+                    }
+                }
+            }
+            
+            // Render categories
+            function renderCategories() {
+                categoriesContainer.innerHTML = '';
+                
+                if (categories.length === 0) {
+                    categoriesContainer.innerHTML = '<p>No categories added yet. Add a category to start tracking expenses.</p>';
+                    return;
+                }
+                
+                categories.forEach(category => {
+                    const categoryElement = document.createElement('div');
+                    categoryElement.className = 'category';
+                    
+                    // Create header
+                    const headerElement = document.createElement('div');
+                    headerElement.className = 'category-header';
+                    headerElement.innerHTML = `
+                        <div class="category-name">${category.name}</div>
+                    `;
+                    
+                    // Create expenses list
+                    const expensesListElement = document.createElement('div');
+                    expensesListElement.className = 'expenses-list';
+                    
+                    if (category.expenses.length === 0) {
+                        expensesListElement.innerHTML = '<p>No expenses added yet.</p>';
+                    } else {
+                        category.expenses.forEach(expense => {
+                            const expenseElement = document.createElement('div');
+                            expenseElement.className = 'expense-item';
+                            expenseElement.innerHTML = `
+                                <span class="expense-amount">$${expense.amount.toFixed(2)}</span>
+                                <button class="remove-btn" onclick="removeExpense(${category.id}, ${expense.id})">✕</button>
+                            `;
+                            expensesListElement.appendChild(expenseElement);
+                        });
+                    }
+                    
+                    // Create add expense form
+                    const formElement = document.createElement('div');
+                    formElement.className = 'add-expense-form';
+                    formElement.innerHTML = `
+                        <input type="number" id="expense-amount-${category.id}" placeholder="Enter amount" step="0.01">
+                        <button id="add-expense-btn-${category.id}">Add Expense</button>
+                    `;
+                    
+                    // Create total element
+                    const totalElement = document.createElement('div');
+                    totalElement.className = 'category-total';
+                    totalElement.innerHTML = `
+                        <span>Total ${category.name}:</span>
+                        <span id="category-total-${category.id}">$${category.total.toFixed(2)}</span>
+                    `;
+                    
+                    // Append all elements
+                    categoryElement.appendChild(headerElement);
+                    categoryElement.appendChild(expensesListElement);
+                    categoryElement.appendChild(formElement);
+                    categoryElement.appendChild(totalElement);
+                    
+                    categoriesContainer.appendChild(categoryElement);
+                    
+                    // Add event listeners for the newly created elements
+                    const currentExpenseInput = document.getElementById(`expense-amount-${category.id}`);
+                    const currentAddExpenseBtn = document.getElementById(`add-expense-btn-${category.id}`);
+                    
+                    currentAddExpenseBtn.addEventListener('click', function() {
+                        addExpenseToCategory(category.id);
+                    });
+                    
+                    // Add Enter key functionality for expense input
+                    currentExpenseInput.addEventListener('keypress', function(event) {
+                        if (event.key === 'Enter') {
+                            addExpenseToCategory(category.id);
+                        }
+                    });
+                });
+                
+                // Add functions to window object to make them accessible from inline event handlers
+                window.removeExpense = removeExpense;
+            }
+            
+            // Initialize
+            renderCategories();
+            
+            // Enter key functionality for category name
+            categoryNameInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    addCategory();
+                }
+            });
+            
+            // Enter key functionality for calculate grand total
+            document.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter' && event.ctrlKey) {
+                    updateGrandTotal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
